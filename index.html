@@ -102,9 +102,12 @@ h1 {
   width: 100%;
 }
 .tap-btn:hover { background: #111; }
-.tap-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
+.error-msg {
+  font-size: 0.8rem;
+  color: #111;
+  text-align: center;
+  margin-top: 10px;
+  min-height: 1.2em;
 }
 
 /* シーン画面 */
@@ -231,11 +234,12 @@ h1 {
 
     <div class="label">AMOUNT</div>
     <div class="input-row">
-      <input type="tel" class="amount-input" id="amountInput" placeholder="1000" inputmode="numeric">
+      <input type="text" class="amount-input" id="amountInput" placeholder="1000" inputmode="numeric">
       <span class="unit">万円</span>
     </div>
 
     <button class="tap-btn" id="tapBtn" onclick="startScene()">肩を叩く</button>
+    <div class="error-msg" id="errorMsg"></div>
   </div>
 
   <!-- シーン画面 -->
@@ -330,20 +334,12 @@ function selectCat(id, btn) {
   selectedCat = id;
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  updateTapBtn();
 }
 
 // デフォルト選択
 selectCat('asset', catEl.children[0]);
 
 const amountInput = document.getElementById('amountInput');
-amountInput.addEventListener('input', updateTapBtn);
-amountInput.addEventListener('change', updateTapBtn);
-
-function updateTapBtn() {
-  const val = amountInput.value.replace(/[^0-9\-]/g, '');
-  document.getElementById('tapBtn').disabled = !selectedCat || val === '';
-}
 
 // 金額フォーマット
 function formatAmount(num) {
@@ -370,11 +366,20 @@ function getReaction(catId, amount) {
 
 // シーン開始
 function startScene() {
-  const catId = selectedCat;
-  const cat = cats.find(c => c.id === catId);
-  const raw = amountInput.value.replace(/[^0-9\-]/g, '');
-  if (!catId || raw === '') return;
-  const amount = Number(raw);
+  var errorEl = document.getElementById('errorMsg');
+  errorEl.textContent = '';
+  var catId = selectedCat;
+  var cat = cats.find(function(c) { return c.id === catId; });
+  var raw = amountInput.value.replace(/[^\d\-]/g, '');
+  if (raw === '' || raw === '-') {
+    errorEl.textContent = '金額を入力してください';
+    return;
+  }
+  var amount = parseInt(raw, 10);
+  if (isNaN(amount)) {
+    errorEl.textContent = '金額を入力してください';
+    return;
+  }
   const reaction = getReaction(catId, amount);
   const formatted = formatAmount(amount);
 
@@ -429,7 +434,7 @@ function startScene() {
   if (reaction.line) {
     shareText += '大学生' + reaction.line + '\n';
   }
-  shareText += reaction.desc;
+  shareText += reaction.desc + '\n\nhttps://sodateya-claude.github.io/staba-kata/';
 
   document.getElementById('shareBtn').href =
     'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText);
@@ -444,7 +449,6 @@ function retry() {
   amountInput.focus();
 }
 
-updateTapBtn();
 </script>
 </body>
 </html>
