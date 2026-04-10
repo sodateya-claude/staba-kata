@@ -125,24 +125,12 @@ h1 {
   transition: opacity 0.4s ease;
 }
 .scene-line.visible { opacity: 1; }
-.scene-line.location {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  margin-bottom: 28px;
-}
 .scene-line.dialogue {
   padding-left: 1em;
   text-indent: -1em;
 }
 .scene-line.reaction {
-  font-size: 1.05rem;
   font-weight: bold;
-  margin-top: 8px;
-}
-.scene-line.desc {
-  font-size: 0.82rem;
-  margin-top: -12px;
-  margin-bottom: 28px;
 }
 
 /* 結果画面 */
@@ -155,23 +143,9 @@ h1 {
   transition: opacity 0.4s ease;
 }
 .result-box.visible { opacity: 1; }
-.result-category {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  margin-bottom: 12px;
-}
-.result-amount {
-  font-size: 1.6rem;
-  margin-bottom: 4px;
-}
-.result-reaction {
-  font-size: 0.95rem;
-  line-height: 1.7;
-  margin-bottom: 4px;
-}
-.result-desc {
-  font-size: 0.82rem;
-  line-height: 1.6;
+.result-fulltext {
+  font-size: 0.88rem;
+  line-height: 1.9;
 }
 
 .buttons-area {
@@ -258,63 +232,64 @@ h1 {
 <script>
 // カテゴリ定義
 const cats = [
-  { id: 'asset',  label: '資産',   prefix: '自分資産',   scene: 'チャートを眺めている大学生がいる。' },
-  { id: 'income', label: '年収',   prefix: '自分年収',   scene: 'MacBookでレポートを書いている大学生がいる。' },
-  { id: 'loss',   label: '含み損', prefix: '自分含み損',  scene: 'チャートを眺めている大学生がいる。' },
-  { id: 'debt',   label: '借金',   prefix: '自分借金',   scene: '参考書を広げている大学生がいる。' }
+  { id: 'asset',  label: '資産',   prefix: '自分資産',   scene: 'チャート眺めてる', topic: '投資してる' },
+  { id: 'income', label: '年収',   prefix: '自分年収',   scene: '就活サイト見てる', topic: '就活してる' },
+  { id: 'loss',   label: '含み損', prefix: '自分含み損',  scene: 'チャート眺めてる', topic: '投資してる' },
+  { id: 'debt',   label: '借金',   prefix: '自分借金',   scene: '参考書広げてる',   topic: '借金してる' }
 ];
 
 // リアクション定義（万円単位）
+// kettara: 「って言ったら〜」の部分, last: 「やっぱり〜」の部分
 const reactions = {
   asset: [
-    { max: -1,     line: '「...大丈夫ですか？」',                        desc: 'コーヒーを奢ろうとしている。' },
-    { max: 0,      line: '「......」',                                   desc: 'なぜ声をかけたのか理解できないようだ。' },
-    { max: 10,     line: '「...はい？」',                                desc: '聞き間違いかと思っている。' },
-    { max: 100,    line: '「あ、はい...頑張ってください」',               desc: '目を逸らされた。' },
-    { max: 500,    line: '「そうなんですね...」',                         desc: 'イヤホンを付け直された。' },
-    { max: 1000,   line: '「え、すごいですね！」',                        desc: 'むっちゃ驚いている。' },
-    { max: 3000,   line: '「えっと...なんで僕に？」',                     desc: '若干引いている。' },
-    { max: 5000,   line: '「...」',                                      desc: '大学生が荷物をまとめ始めた。' },
-    { max: 10000,  line: '「すみません、席移りますね...」',                desc: '足早に去っていった。' },
-    { max: 100000, line: '「お客様、他のお客様のご迷惑に...」',            desc: '店員が来た。' },
-    { max: Infinity, line: '',                                           desc: '通報された。パトカーが来ている。' }
+    { max: -1,     kettara: 'むっちゃ心配してきた',              last: 'マイナスってやばい部類だよね？' },
+    { max: 0,      kettara: '意味わからんって顔された',          last: '0円って逆にすごい部類だよね？' },
+    { max: 10,     kettara: '聞き返された',                      last: 'まだまだこれからの部類だよね？' },
+    { max: 100,    kettara: '目を逸らされた',                    last: 'まだ頑張らないとの部類だよね？' },
+    { max: 500,    kettara: 'イヤホン付け直された',              last: 'まあまあの部類だよね？' },
+    { max: 1000,   kettara: 'むっちゃ驚いてた',                  last: 'すごい部類だよね？' },
+    { max: 3000,   kettara: 'ちょっと引いてた',                  last: 'かなりすごい部類だよね？' },
+    { max: 5000,   kettara: '荷物まとめて逃げられた',            last: '怖がられる部類だよね？' },
+    { max: 10000,  kettara: '足早に席を移られた',                last: '不審者扱いされる部類だよね？' },
+    { max: 100000, kettara: '店員が飛んできた',                  last: '通報される部類だよね？' },
+    { max: Infinity, kettara: '警察が来た',                      last: '逮捕される部類だよね？' }
   ],
   income: [
-    { max: -1,     line: '「...それ、大丈夫なんですか？」',               desc: '本気で心配されている。' },
-    { max: 0,      line: '「...無職ですか？」',                           desc: '素直な疑問をぶつけられた。' },
-    { max: 100,    line: '「バイトですか？」',                            desc: '親近感を持たれている。' },
-    { max: 300,    line: '「あ、普通ですね」',                            desc: '真顔で言われた。' },
-    { max: 500,    line: '「あ、いいですね」',                            desc: '社交辞令っぽい。' },
-    { max: 800,    line: '「おお、すごいですね！」',                       desc: '素直に驚いている。' },
-    { max: 1500,   line: '「...なんで僕に言うんですか？」',                desc: '怖がっている。' },
-    { max: 3000,   line: '「...」',                                      desc: '大学生が荷物をまとめ始めた。' },
-    { max: 5000,   line: '「お客様、他のお客様のご迷惑に...」',            desc: '店員が来た。' },
-    { max: 10000,  line: '「あ、あの人です」',                            desc: '店員が警察に電話している。' },
-    { max: Infinity, line: '',                                           desc: '通報された。SPが来ている。' }
+    { max: -1,     kettara: '本気で心配された',                  last: 'マイナスってやばい部類だよね？' },
+    { max: 0,      kettara: '「無職ですか？」って聞かれた',      last: '無職ってびっくりされる部類だよね？' },
+    { max: 100,    kettara: '「バイトですか？」って言われた',     last: 'バイトレベルの部類だよね？' },
+    { max: 300,    kettara: '「普通ですね」って真顔で言われた',   last: '普通の部類だよね？' },
+    { max: 500,    kettara: '社交辞令っぽく「いいですね」って言われた', last: 'まあまあの部類だよね？' },
+    { max: 800,    kettara: 'むっちゃ驚いてた',                  last: 'すごい部類だよね？' },
+    { max: 1500,   kettara: '「なんで僕に言うんですか」って怖がられた', last: '怖がられる部類だよね？' },
+    { max: 3000,   kettara: '荷物まとめて逃げられた',            last: '不審者扱いされる部類だよね？' },
+    { max: 5000,   kettara: '店員が飛んできた',                  last: '通報される部類だよね？' },
+    { max: 10000,  kettara: '店員が警察に電話してた',            last: '事案になる部類だよね？' },
+    { max: Infinity, kettara: 'SPが来た',                        last: '要人レベルの部類だよね？' }
   ],
   loss: [
-    { max: 0,      line: '「え、プラスなんですか？」',                     desc: '話が噛み合っていない。' },
-    { max: 10,     line: '「あ、そうですか」',                            desc: '興味なさそうにうなずいている。' },
-    { max: 100,    line: '「まあ、そういうこともありますよ」',              desc: '慰められている。' },
-    { max: 500,    line: '「え...大丈夫ですか？」',                        desc: '心配されている。' },
-    { max: 1000,   line: '「...コーヒー、奢りましょうか？」',              desc: '本気で心配されている。' },
-    { max: 3000,   line: '「...」',                                      desc: '大学生が言葉を失っている。' },
-    { max: 5000,   line: '「...えっ」',                                   desc: '大学生の目が潤んでいる。' },
-    { max: 10000,  line: '「......」',                                    desc: '大学生が泣いている。あなたの含み損に。' },
-    { max: 50000,  line: '',                                             desc: '大学生が震える手で投資アプリをアンインストールしている。' },
-    { max: Infinity, line: '',                                           desc: '大学生がスタバを出て、就職情報サイトを開いている。' }
+    { max: 0,      kettara: '「プラスなんですか？」って聞き返された', last: '話が噛み合わない部類だよね？' },
+    { max: 10,     kettara: '興味なさそうにうなずかれた',         last: '大したことない部類だよね？' },
+    { max: 100,    kettara: '「そういうこともありますよ」って慰められた', last: 'あるあるの部類だよね？' },
+    { max: 500,    kettara: '「大丈夫ですか？」って心配された',   last: '心配される部類だよね？' },
+    { max: 1000,   kettara: 'コーヒー奢ろうとしてきた',          last: '同情される部類だよね？' },
+    { max: 3000,   kettara: '言葉を失ってた',                    last: '絶句される部類だよね？' },
+    { max: 5000,   kettara: '目が潤んでた',                      last: '他人を泣かせる部類だよね？' },
+    { max: 10000,  kettara: '泣いてた。俺の含み損に。',          last: '人を泣かせるレベルの部類だよね？' },
+    { max: 50000,  kettara: '震える手で投資アプリをアンインストールしてた', last: '人の人生を変える部類だよね？' },
+    { max: Infinity, kettara: 'スタバを出て就職サイトを開いてた', last: '投資をやめさせるレベルの部類だよね？' }
   ],
   debt: [
-    { max: 0,      line: '「え、借金ないんですか？」',                     desc: '奨学金仲間じゃなかった。' },
-    { max: 50,     line: '「あ、奨学金ですか？同じです」',                 desc: '仲間意識が芽生えている。' },
-    { max: 300,    line: '「まあ、みんなありますよ」',                     desc: '慰められている。' },
-    { max: 500,    line: '「え...返せるんですか？」',                      desc: '心配されている。' },
-    { max: 1000,   line: '「...コーヒー、奢りましょうか？」',              desc: '同情されている。' },
-    { max: 3000,   line: '「うちの父、弁護士なんで...」',                  desc: '名刺を渡された。' },
-    { max: 5000,   line: '「...」',                                      desc: '大学生が震えている。' },
-    { max: 10000,  line: '「...嘘ですよね？」',                            desc: '信じたくない顔をしている。' },
-    { max: 50000,  line: '',                                             desc: '大学生がスタバを出て行った。人生について考え直すらしい。' },
-    { max: Infinity, line: '',                                           desc: '大学生が泣きながら親に電話している。' }
+    { max: 0,      kettara: '「借金ないんですか？」って驚かれた', last: '借金ゼロって逆にすごい部類だよね？' },
+    { max: 50,     kettara: '「奨学金ですか？同じです」って共感された', last: 'あるあるの部類だよね？' },
+    { max: 300,    kettara: '「みんなありますよ」って慰められた', last: 'まだ普通の部類だよね？' },
+    { max: 500,    kettara: '「返せるんですか？」って心配された', last: '心配される部類だよね？' },
+    { max: 1000,   kettara: 'コーヒー奢ろうとしてきた',          last: '同情される部類だよね？' },
+    { max: 3000,   kettara: '父親の名刺を渡された。弁護士らしい。', last: '法律相談を勧められる部類だよね？' },
+    { max: 5000,   kettara: '震えてた',                          last: '人を震えさせる部類だよね？' },
+    { max: 10000,  kettara: '「嘘ですよね？」って聞き返された',  last: '信じてもらえない部類だよね？' },
+    { max: 50000,  kettara: 'スタバ出てった。人生考え直すらしい。', last: '人の人生観を変える部類だよね？' },
+    { max: Infinity, kettara: '泣きながら親に電話してた',        last: '他人を泣かせる部類だよね？' }
   ]
 };
 
@@ -389,18 +364,13 @@ function startScene() {
   const area = document.getElementById('sceneArea');
   area.innerHTML = '';
 
-  // シーンの台詞を構築
+  // 元ネタ構文に沿ったシーンを構築
   const lines = [
-    { text: 'STARBUCKS', cls: 'location' },
-    { text: cat.scene, cls: '' },
-    { text: '肩を、叩いた。', cls: '' },
-    { text: 'あなた「あの、' + cat.prefix + formatted + 'です」', cls: 'dialogue' }
+    { text: '今日、スタバで' + cat.scene + '大学生がいたから、肩叩いて', cls: '' },
+    { text: '「あの、' + cat.prefix + formatted + 'です」', cls: 'dialogue' },
+    { text: 'って言ったら' + reaction.kettara, cls: 'reaction' },
+    { text: '最近' + cat.topic + '人増えてきたけど、やっぱり一般人からしたら' + cat.label + formatted + 'って' + reaction.last, cls: '' }
   ];
-
-  if (reaction.line) {
-    lines.push({ text: '大学生' + reaction.line, cls: 'dialogue reaction' });
-  }
-  lines.push({ text: reaction.desc, cls: 'desc' });
 
   // 台詞を順番に表示
   lines.forEach((l, i) => {
@@ -414,27 +384,23 @@ function startScene() {
   let delay = 300;
   allLines.forEach((el, i) => {
     setTimeout(() => el.classList.add('visible'), delay);
-    delay += i === 2 ? 800 : 500; // 「肩を叩いた」の後は長めの間
+    delay += i === 1 ? 800 : 600;
   });
 
-  // 結果ボックス
+  // 結果ボックス（構文全体を1つのテキストとして表示）
+  const fullText = '今日、スタバで' + cat.scene + '大学生がいたから、肩叩いて\n'
+    + '「あの、' + cat.prefix + formatted + 'です」\n'
+    + 'って言ったら' + reaction.kettara + '\n'
+    + '最近' + cat.topic + '人増えてきたけど、やっぱり一般人からしたら' + cat.label + formatted + 'って' + reaction.last;
+
   const box = document.getElementById('resultBox');
-  box.innerHTML =
-    '<div class="result-category">' + cat.label.toUpperCase() + '</div>' +
-    '<div class="result-amount">' + formatted + '</div>' +
-    '<div class="result-reaction">' + (reaction.line || '') + '</div>' +
-    '<div class="result-desc">' + reaction.desc + '</div>';
+  box.innerHTML = '<div class="result-fulltext">' + fullText.replace(/\n/g, '<br>') + '</div>';
 
   setTimeout(() => box.classList.add('visible'), delay + 200);
   setTimeout(() => document.getElementById('buttonsArea').classList.add('visible'), delay + 500);
 
-  // シェアボタン
-  let shareText = 'スタバ肩叩きシミュレーター（@claude_sodateya）\n\n';
-  shareText += cat.label + formatted + 'で肩を叩いた結果...\n';
-  if (reaction.line) {
-    shareText += '大学生' + reaction.line + '\n';
-  }
-  shareText += reaction.desc + '\n\nhttps://sodateya-claude.github.io/staba-kata/';
+  // シェアボタン（元ネタ構文そのままでシェア）
+  let shareText = fullText + '\n\n' + 'https://sodateya-claude.github.io/staba-kata/' + '\n(@claude_sodateya)';
 
   document.getElementById('shareBtn').href =
     'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText);
