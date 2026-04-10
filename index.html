@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スタバ肩叩きシミュレーター</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #ffffff;
+  color: #111111;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+}
+.container {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 20px 60px;
+}
+h1 {
+  font-size: 1.3rem;
+  font-weight: normal;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+}
+.subtitle {
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin-bottom: 48px;
+}
+.label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+/* カテゴリ選択 */
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+.cat-btn {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.85rem;
+  padding: 10px 16px;
+  background: #fff;
+  color: #111;
+  border: 1.5px solid #111;
+  border-radius: 0;
+  cursor: pointer;
+}
+.cat-btn:hover { background: #fff; }
+.cat-btn.selected {
+  background: #111;
+  color: #fff;
+}
+
+/* 金額入力 */
+.input-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+.amount-input {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.8rem;
+  width: 100%;
+  border: none;
+  border-bottom: 1.5px solid #111;
+  border-radius: 0;
+  outline: none;
+  padding: 8px 0;
+  background: transparent;
+  color: #111;
+  -moz-appearance: textfield;
+}
+.amount-input::-webkit-outer-spin-button,
+.amount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.unit {
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.tap-btn {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.95rem;
+  padding: 14px 32px;
+  background: #111;
+  color: #fff;
+  border: 1.5px solid #111;
+  border-radius: 0;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+.tap-btn:hover { background: #111; }
+.tap-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* シーン画面 */
+.scene {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.scene-line {
+  font-size: 0.92rem;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.scene-line.visible { opacity: 1; }
+.scene-line.location {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 28px;
+}
+.scene-line.dialogue {
+  padding-left: 1em;
+  text-indent: -1em;
+}
+.scene-line.reaction {
+  font-size: 1.05rem;
+  font-weight: bold;
+  margin-top: 8px;
+}
+.scene-line.desc {
+  font-size: 0.82rem;
+  margin-top: -12px;
+  margin-bottom: 28px;
+}
+
+/* 結果画面 */
+.result-box {
+  border: 1.5px solid #111;
+  padding: 24px 20px;
+  margin-top: 20px;
+  margin-bottom: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.result-box.visible { opacity: 1; }
+.result-category {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.result-amount {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+}
+.result-reaction {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 4px;
+}
+.result-desc {
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.buttons-area {
+  margin-top: 32px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.buttons-area.visible { opacity: 1; }
+.share-btn {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.95rem;
+  padding: 14px 32px;
+  background: #111;
+  color: #fff;
+  border: 1.5px solid #111;
+  border-radius: 0;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  text-align: center;
+}
+.share-btn:hover { background: #111; }
+.retry-btn {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.9rem;
+  padding: 12px 32px;
+  background: #fff;
+  color: #111;
+  border: 1.5px solid #111;
+  border-radius: 0;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+.credit {
+  font-size: 0.7rem;
+  text-align: center;
+  margin-top: 32px;
+  opacity: 0.5;
+}
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 入力画面 -->
+  <div id="inputScreen">
+    <h1>スタバ肩叩き<br>シミュレーター</h1>
+    <p class="subtitle">
+      スタバでチャートを眺めている大学生に<br>
+      肩を叩いて話しかけたら、<br>
+      どんな反応をされるか？
+    </p>
+
+    <div class="label">CATEGORY</div>
+    <div class="categories" id="categories"></div>
+
+    <div class="label">AMOUNT</div>
+    <div class="input-row">
+      <input type="number" class="amount-input" id="amountInput" placeholder="1,000" inputmode="numeric">
+      <span class="unit">万円</span>
+    </div>
+
+    <button class="tap-btn" id="tapBtn" onclick="startScene()">肩を叩く</button>
+  </div>
+
+  <!-- シーン画面 -->
+  <div id="sceneScreen" class="hidden">
+    <div class="scene" id="sceneArea"></div>
+    <div class="result-box" id="resultBox"></div>
+    <div class="buttons-area" id="buttonsArea">
+      <a class="share-btn" id="shareBtn" target="_blank" rel="noopener">X でシェア</a>
+      <button class="retry-btn" onclick="retry()">金額を変えて再挑戦</button>
+      <div class="credit">@claude_sodateya</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// カテゴリ定義
+const cats = [
+  { id: 'asset',  label: '資産',   prefix: '自分資産',   scene: 'チャートを眺めている大学生がいる。' },
+  { id: 'income', label: '年収',   prefix: '自分年収',   scene: 'MacBookでレポートを書いている大学生がいる。' },
+  { id: 'loss',   label: '含み損', prefix: '自分含み損',  scene: 'チャートを眺めている大学生がいる。' },
+  { id: 'debt',   label: '借金',   prefix: '自分借金',   scene: '参考書を広げている大学生がいる。' }
+];
+
+// リアクション定義（万円単位）
+const reactions = {
+  asset: [
+    { max: -1,     line: '「...大丈夫ですか？」',                        desc: 'コーヒーを奢ろうとしている。' },
+    { max: 0,      line: '「......」',                                   desc: 'なぜ声をかけたのか理解できないようだ。' },
+    { max: 10,     line: '「...はい？」',                                desc: '聞き間違いかと思っている。' },
+    { max: 100,    line: '「あ、はい...頑張ってください」',               desc: '目を逸らされた。' },
+    { max: 500,    line: '「そうなんですね...」',                         desc: 'イヤホンを付け直された。' },
+    { max: 1000,   line: '「え、すごいですね！」',                        desc: 'むっちゃ驚いている。' },
+    { max: 3000,   line: '「えっと...なんで僕に？」',                     desc: '若干引いている。' },
+    { max: 5000,   line: '「...」',                                      desc: '大学生が荷物をまとめ始めた。' },
+    { max: 10000,  line: '「すみません、席移りますね...」',                desc: '足早に去っていった。' },
+    { max: 100000, line: '「お客様、他のお客様のご迷惑に...」',            desc: '店員が来た。' },
+    { max: Infinity, line: '',                                           desc: '通報された。パトカーが来ている。' }
+  ],
+  income: [
+    { max: -1,     line: '「...それ、大丈夫なんですか？」',               desc: '本気で心配されている。' },
+    { max: 0,      line: '「...無職ですか？」',                           desc: '素直な疑問をぶつけられた。' },
+    { max: 100,    line: '「バイトですか？」',                            desc: '親近感を持たれている。' },
+    { max: 300,    line: '「あ、普通ですね」',                            desc: '真顔で言われた。' },
+    { max: 500,    line: '「あ、いいですね」',                            desc: '社交辞令っぽい。' },
+    { max: 800,    line: '「おお、すごいですね！」',                       desc: '素直に驚いている。' },
+    { max: 1500,   line: '「...なんで僕に言うんですか？」',                desc: '怖がっている。' },
+    { max: 3000,   line: '「...」',                                      desc: '大学生が荷物をまとめ始めた。' },
+    { max: 5000,   line: '「お客様、他のお客様のご迷惑に...」',            desc: '店員が来た。' },
+    { max: 10000,  line: '「あ、あの人です」',                            desc: '店員が警察に電話している。' },
+    { max: Infinity, line: '',                                           desc: '通報された。SPが来ている。' }
+  ],
+  loss: [
+    { max: 0,      line: '「え、プラスなんですか？」',                     desc: '話が噛み合っていない。' },
+    { max: 10,     line: '「あ、そうですか」',                            desc: '興味なさそうにうなずいている。' },
+    { max: 100,    line: '「まあ、そういうこともありますよ」',              desc: '慰められている。' },
+    { max: 500,    line: '「え...大丈夫ですか？」',                        desc: '心配されている。' },
+    { max: 1000,   line: '「...コーヒー、奢りましょうか？」',              desc: '本気で心配されている。' },
+    { max: 3000,   line: '「...」',                                      desc: '大学生が言葉を失っている。' },
+    { max: 5000,   line: '「...えっ」',                                   desc: '大学生の目が潤んでいる。' },
+    { max: 10000,  line: '「......」',                                    desc: '大学生が泣いている。あなたの含み損に。' },
+    { max: 50000,  line: '',                                             desc: '大学生が震える手で投資アプリをアンインストールしている。' },
+    { max: Infinity, line: '',                                           desc: '大学生がスタバを出て、就職情報サイトを開いている。' }
+  ],
+  debt: [
+    { max: 0,      line: '「え、借金ないんですか？」',                     desc: '奨学金仲間じゃなかった。' },
+    { max: 50,     line: '「あ、奨学金ですか？同じです」',                 desc: '仲間意識が芽生えている。' },
+    { max: 300,    line: '「まあ、みんなありますよ」',                     desc: '慰められている。' },
+    { max: 500,    line: '「え...返せるんですか？」',                      desc: '心配されている。' },
+    { max: 1000,   line: '「...コーヒー、奢りましょうか？」',              desc: '同情されている。' },
+    { max: 3000,   line: '「うちの父、弁護士なんで...」',                  desc: '名刺を渡された。' },
+    { max: 5000,   line: '「...」',                                      desc: '大学生が震えている。' },
+    { max: 10000,  line: '「...嘘ですよね？」',                            desc: '信じたくない顔をしている。' },
+    { max: 50000,  line: '',                                             desc: '大学生がスタバを出て行った。人生について考え直すらしい。' },
+    { max: Infinity, line: '',                                           desc: '大学生が泣きながら親に電話している。' }
+  ]
+};
+
+let selectedCat = null;
+
+// カテゴリボタン生成
+const catEl = document.getElementById('categories');
+cats.forEach(c => {
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn';
+  btn.textContent = c.label;
+  btn.onclick = () => selectCat(c.id, btn);
+  catEl.appendChild(btn);
+});
+
+function selectCat(id, btn) {
+  selectedCat = id;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  updateTapBtn();
+}
+
+// デフォルト選択
+selectCat('asset', catEl.children[0]);
+
+const amountInput = document.getElementById('amountInput');
+amountInput.addEventListener('input', updateTapBtn);
+
+function updateTapBtn() {
+  document.getElementById('tapBtn').disabled = !selectedCat || amountInput.value === '';
+}
+
+// 金額フォーマット
+function formatAmount(num) {
+  const abs = Math.abs(num);
+  if (abs >= 10000) {
+    const oku = Math.floor(abs / 10000);
+    const man = abs % 10000;
+    let s = oku.toLocaleString() + '億';
+    if (man > 0) s += man.toLocaleString() + '万';
+    return (num < 0 ? '-' : '') + s + '円';
+  }
+  return num.toLocaleString() + '万円';
+}
+
+// リアクション取得
+function getReaction(catId, amount) {
+  const list = reactions[catId];
+  for (const r of list) {
+    if (amount <= r.max) return r;
+  }
+  return list[list.length - 1];
+}
+
+// シーン開始
+function startScene() {
+  const catId = selectedCat;
+  const cat = cats.find(c => c.id === catId);
+  const amount = Number(amountInput.value);
+  const reaction = getReaction(catId, amount);
+  const formatted = formatAmount(amount);
+
+  document.getElementById('inputScreen').classList.add('hidden');
+  document.getElementById('sceneScreen').classList.remove('hidden');
+
+  const area = document.getElementById('sceneArea');
+  area.innerHTML = '';
+
+  // シーンの台詞を構築
+  const lines = [
+    { text: 'STARBUCKS', cls: 'location' },
+    { text: cat.scene, cls: '' },
+    { text: '肩を、叩いた。', cls: '' },
+    { text: 'あなた「あの、' + cat.prefix + formatted + 'です」', cls: 'dialogue' }
+  ];
+
+  if (reaction.line) {
+    lines.push({ text: '大学生' + reaction.line, cls: 'dialogue reaction' });
+  }
+  lines.push({ text: reaction.desc, cls: 'desc' });
+
+  // 台詞を順番に表示
+  lines.forEach((l, i) => {
+    const div = document.createElement('div');
+    div.className = 'scene-line ' + l.cls;
+    div.textContent = l.text;
+    area.appendChild(div);
+  });
+
+  const allLines = area.querySelectorAll('.scene-line');
+  let delay = 300;
+  allLines.forEach((el, i) => {
+    setTimeout(() => el.classList.add('visible'), delay);
+    delay += i === 2 ? 800 : 500; // 「肩を叩いた」の後は長めの間
+  });
+
+  // 結果ボックス
+  const box = document.getElementById('resultBox');
+  box.innerHTML =
+    '<div class="result-category">' + cat.label.toUpperCase() + '</div>' +
+    '<div class="result-amount">' + formatted + '</div>' +
+    '<div class="result-reaction">' + (reaction.line || '') + '</div>' +
+    '<div class="result-desc">' + reaction.desc + '</div>';
+
+  setTimeout(() => box.classList.add('visible'), delay + 200);
+  setTimeout(() => document.getElementById('buttonsArea').classList.add('visible'), delay + 500);
+
+  // シェアボタン
+  let shareText = 'スタバ肩叩きシミュレーター（@claude_sodateya）\n\n';
+  shareText += cat.label + formatted + 'で肩を叩いた結果...\n';
+  if (reaction.line) {
+    shareText += '大学生' + reaction.line + '\n';
+  }
+  shareText += reaction.desc;
+
+  document.getElementById('shareBtn').href =
+    'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText);
+}
+
+function retry() {
+  document.getElementById('sceneScreen').classList.add('hidden');
+  document.getElementById('inputScreen').classList.remove('hidden');
+  document.getElementById('resultBox').classList.remove('visible');
+  document.getElementById('buttonsArea').classList.remove('visible');
+  amountInput.value = '';
+  amountInput.focus();
+}
+
+updateTapBtn();
+</script>
+</body>
+</html>
