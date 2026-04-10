@@ -221,9 +221,9 @@ h1 {
   <div id="inputScreen">
     <h1>スタバ肩叩き<br>シミュレーター</h1>
     <p class="subtitle">
-      スタバでチャートを眺めている大学生に<br>
-      肩を叩いて話しかけたら、<br>
-      どんな反応をされるか？
+      スタバで大学生がチャートを<br>
+      眺めています。<br><br>
+      あなたは何を伝えますか？
     </p>
 
     <div class="label">CATEGORY</div>
@@ -231,7 +231,7 @@ h1 {
 
     <div class="label">AMOUNT</div>
     <div class="input-row">
-      <input type="number" class="amount-input" id="amountInput" placeholder="1,000" inputmode="numeric">
+      <input type="tel" class="amount-input" id="amountInput" placeholder="1000" inputmode="numeric">
       <span class="unit">万円</span>
     </div>
 
@@ -338,13 +338,16 @@ selectCat('asset', catEl.children[0]);
 
 const amountInput = document.getElementById('amountInput');
 amountInput.addEventListener('input', updateTapBtn);
+amountInput.addEventListener('change', updateTapBtn);
 
 function updateTapBtn() {
-  document.getElementById('tapBtn').disabled = !selectedCat || amountInput.value === '';
+  const val = amountInput.value.replace(/[^0-9\-]/g, '');
+  document.getElementById('tapBtn').disabled = !selectedCat || val === '';
 }
 
 // 金額フォーマット
 function formatAmount(num) {
+  if (isNaN(num)) num = 0;
   const abs = Math.abs(num);
   if (abs >= 10000) {
     const oku = Math.floor(abs / 10000);
@@ -369,7 +372,9 @@ function getReaction(catId, amount) {
 function startScene() {
   const catId = selectedCat;
   const cat = cats.find(c => c.id === catId);
-  const amount = Number(amountInput.value);
+  const raw = amountInput.value.replace(/[^0-9\-]/g, '');
+  if (!catId || raw === '') return;
+  const amount = Number(raw);
   const reaction = getReaction(catId, amount);
   const formatted = formatAmount(amount);
 
